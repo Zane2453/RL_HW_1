@@ -57,12 +57,10 @@ def mc_policy_evaluation(policy, env, num_episodes, gamma=1.0):
 
         while not Done:
             action = policy(state)
-            #episodes[episode].append(action)
             new_state, reward, Done, temp_list = env.step(action)
             for gain in range(len(gains[episode])):
                 gains[episode][gain] += float(reward)
             gains[episode].append(float(reward))
-            #episodes[episode].append(reward)
             if not Done:
                 state = new_state
                 episodes[episode].append(new_state)
