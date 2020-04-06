@@ -113,10 +113,47 @@ def td0_policy_evaluation(policy, env, num_episodes, gamma=1.0):
     """
     # value function
     V = defaultdict(float)
+    N = defaultdict(int)
 
     ##### FINISH TODOS HERE #####
-    
+    episodes = [[] for _ in range(num_episodes)]
+    gains = [[] for _ in range(num_episodes)]
+    reward = [[] for _ in range(num_episodes)]
 
+    for episode in range(num_episodes):
+        state = env.reset()
+        Done = False
+        episodes[episode].append(state)
+
+        while not Done:
+            action = policy(state)
+            next_state, r, Done, temp_list = env.step(action)
+            for gain in range(len(gains[episode])):
+                gains[episode][gain] += float(r)
+            gains[episode].append(float(r))
+            reward[episode].append(float(r))
+            episodes[episode].append(next_state)
+        gains[episode].append(float(0))
+
+    for episode in range(num_episodes):
+        for index in range(len(episodes[episode])-1):
+            state = episodes[episode][index]
+            next_state = episodes[episode][index+1]
+            if state in V:
+                N[state] += 1
+                value = V[state]
+            else:
+                N[state] = 1
+                value = gains[episode][index]
+            
+            if next_state in V:
+                next_value = V[next_state]
+            else:
+                next_value = gains[episode][index+1]
+
+            value = value + (reward[episode][index] + next_value - value) / N[state]
+
+            V[state] = value
     #############################
 
     return V
@@ -169,15 +206,12 @@ def apply_policy(observation):
 if __name__ == '__main__':
     V_mc_10k = mc_policy_evaluation(apply_policy, env, num_episodes=10000)
     plot_value_function(V_mc_10k, title="10,000 Steps")
-    #V_mc_500k = mc_policy_evaluation(apply_policy, env, num_episodes=500000)
-    #plot_value_function(V_mc_500k, title="500,000 Steps")
+    V_mc_500k = mc_policy_evaluation(apply_policy, env, num_episodes=500000)
+    plot_value_function(V_mc_500k, title="500,000 Steps")
 
 
-    #V_td0_10k = td0_policy_evaluation(apply_policy, env, num_episodes=10000)
-    #plot_value_function(V_td0_10k, title="10,000 Steps")
-    #V_td0_500k = td0_policy_evaluation(apply_policy, env, num_episodes=500000)
-    #plot_value_function(V_td0_500k, title="500,000 Steps")
+    V_td0_10k = td0_policy_evaluation(apply_policy, env, num_episodes=10000)
+    plot_value_function(V_td0_10k, title="10,000 Steps")
+    V_td0_500k = td0_policy_evaluation(apply_policy, env, num_episodes=500000)
+    plot_value_function(V_td0_500k, title="500,000 Steps")
     
-
-
-
