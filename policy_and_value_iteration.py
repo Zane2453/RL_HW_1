@@ -72,7 +72,7 @@ def value_iteration(env, gamma=0.9, max_iterations=10 ** 6, eps=10 ** -3):
         policy = np.argmax(Bellman, axis=1)
         new_value = np.max(Bellman, axis=1)
         
-        if np.max(new_value - value) < eps: # do the infinity norm
+        if np.max(np.absolute(new_value - value)) < eps: # do the infinity norm
             break
 
         value = new_value
@@ -121,12 +121,16 @@ def policy_iteration(env, gamma=0.9, max_iterations=10 ** 6, eps=10 ** -3):
     probably_and_reward = env.P # this include the transition probability & rewrad function
 
     for iteration in range(max_iterations):
-        new_value = np.array([0 for _ in range(num_spaces)])
-        for state in range(num_spaces):
-            action = policy[state]
-            new_state = probably_and_reward[state][action][0][1]
-            new_value[state] = probably_and_reward[state][action][0][2] + gamma * value[new_state]
-        value = new_value
+        while True:
+            new_value = np.array([0 for _ in range(num_spaces)])
+            for state in range(num_spaces):
+                action = policy[state]
+                new_state = probably_and_reward[state][action][0][1]
+                new_value[state] = probably_and_reward[state][action][0][2] + gamma * value[new_state]
+
+            if np.max(np.absolute(new_value - value)) < eps: # do the infinity norm
+                break
+            value = new_value
         
         action_value = np.array([[probably_and_reward[state][action][0][2] for action in range(num_actions)] for state in range(num_spaces)])
         for state in range(num_spaces):
@@ -135,7 +139,7 @@ def policy_iteration(env, gamma=0.9, max_iterations=10 ** 6, eps=10 ** -3):
                 action_value[state][action] += (gamma * value[new_state])
         new_policy = np.argmax(action_value, axis=1)
 
-        if np.max(new_policy - policy) < eps: # do the infinity norm
+        if (new_policy == policy).all():
                 break
 
         policy = new_policy
