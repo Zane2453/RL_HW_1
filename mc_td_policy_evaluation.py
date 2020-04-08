@@ -57,7 +57,7 @@ def mc_policy_evaluation(policy, env, num_episodes, gamma=1.0):
         episodes[episode].append(state)
 
         while not Done:
-            action = policy(state)
+            action = apply_policy(state)
             new_state, reward, Done, temp_list = env.step(action)
             for gain in range(len(gains[episode])):
                 gains[episode][gain] += float(reward)
@@ -114,11 +114,9 @@ def td0_policy_evaluation(policy, env, num_episodes, gamma=1.0):
     """
     # value function
     V = defaultdict(float)
-    N = defaultdict(int)
 
     ##### FINISH TODOS HERE #####
     episodes = [[] for _ in range(num_episodes)]
-    gains = [[] for _ in range(num_episodes)]
     reward = [[] for _ in range(num_episodes)]
 
     for episode in range(num_episodes):
@@ -127,27 +125,25 @@ def td0_policy_evaluation(policy, env, num_episodes, gamma=1.0):
         episodes[episode].append(state)
 
         while not Done:
-            action = policy(state)
+            action = apply_policy(state)
             next_state, r, Done, temp_list = env.step(action)
-            '''for gain in range(len(gains[episode])):
-                gains[episode][gain] += float(r)
-            gains[episode].append(float(r))'''
             reward[episode].append(float(r))
-            episodes[episode].append(next_state)
-        #gains[episode].append(float(0))
+            if not Done:
+                state = next_state
+                episodes[episode].append(next_state)
 
     for episode in range(num_episodes):
-        for index in range(len(episodes[episode])-1):
+        for index in range(len(episodes[episode])):
             state = episodes[episode][index]
-            next_state = episodes[episode][index+1]
+            if index != len(episodes[episode])-1:
+                next_state = episodes[episode][index+1]
+            
             if state in V:
-                N[state] += 1
                 value = V[state]
             else:
-                N[state] = 1
                 value = 0
             
-            if index == len(episodes[episode])-2:
+            if index == len(episodes[episode])-1:
                 next_value = 0
             else:
                 if next_state in V:
@@ -155,7 +151,7 @@ def td0_policy_evaluation(policy, env, num_episodes, gamma=1.0):
                 else:
                     next_value = 0
 
-            value = value + ((reward[episode][index] + next_value - value) / N[state])
+            value = value + ((reward[episode][index] + next_value - value) * 0.1)
 
             V[state] = value
     #############################
