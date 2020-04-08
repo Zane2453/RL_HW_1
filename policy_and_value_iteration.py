@@ -141,7 +141,6 @@ def policy_iteration(env, gamma=0.9, max_iterations=10 ** 6, eps=10 ** -3):
 
         if (new_policy == policy).all():
                 break
-
         policy = new_policy
     #############################
 
